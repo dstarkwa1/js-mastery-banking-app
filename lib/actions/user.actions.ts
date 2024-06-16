@@ -14,6 +14,14 @@ export const signIn = async (userData: signInProps) => {
         const {account} = await createAdminClient();
 
         const response = await account.createEmailPasswordSession(userData.email, userData.password);
+        const session = await account.createEmailPasswordSession(userData.email, userData.password);
+
+        cookies().set("appwrite-session", session.secret, {
+            path: "/",
+            httpOnly: true,
+            sameSite: "strict",
+            secure: true,
+            });
 
         return(parseStringify(response));
     } catch (error) {
