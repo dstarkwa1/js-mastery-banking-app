@@ -3,13 +3,13 @@
 import { ID } from "node-appwrite";
 import { createAdminClient, createSessionClient } from "../appwrite";
 import { cookies } from "next/headers";
-import { encryptId, parseStringify } from "../utils";
+import { encryptId, extractCustomerIdFromUrl, parseStringify } from "../utils";
 import { parse } from "path";
 import { error } from "console";
 import { CountryCode, ProcessorTokenCreateRequest, ProcessorTokenCreateRequestProcessorEnum, Products } from "plaid";
 import { plaidClient } from "../plaid";
 import { revalidatePath } from "next/cache";
-import { addFundingSource } from "./dwolla.actions";
+import { addFundingSource, createDwollaCustomer } from "./dwolla.actions";
 
 const {
     APPWRITE_DATABASE_ID: DATABASE_ID,
@@ -41,18 +41,44 @@ export const signIn = async (userData: signInProps) => {
 
 }
 
-export const signUp = async (userData: SignUpParams) => {
+export const signUp = async ({password, ...userData}: SignUpParams) => {
+
+    let newUserAccount;
 
     try {
 
-        const { account } = await createAdminClient();
+        const { account, database } = await createAdminClient();
 
-        const newUserAccount = await account.create(
+        newUserAccount = await account.create(
             ID.unique(), 
             userData.email, 
-            userData.password, 
+            password, 
             `${userData.firstName} ${userData.lastName}`);
-        const session = await account.createEmailPasswordSession(userData.email, userData.password);
+
+        if(!newUserAccount) throw new Error("Error Creating User")
+        
+        const dwollaCustomerUrl = await createDwollaCustomer({
+            ...userData,
+            type:'personal'
+        })
+
+        if(!dwollaCustomerUrl) throw new Error("error creating Dwolla Customer")
+        
+        const dwollaCustomerId = extractCustomerIdFromUrl(dwollaCustomerUrl)
+        
+        const newUser = await database.createDocument(
+            DATABASE_ID!,
+            USER_COLLECTION_ID!,
+            ID.unique(),
+            {
+                ...userData,
+                userId: newUserAccount.$id,
+                dwollaCustomerId,
+                dwollaCustomerUrl
+            }
+        )
+
+        const session = await account.createEmailPasswordSession(userData.email, password);
 
         cookies().set("appwrite-session", session.secret, {
         path: "/",
@@ -61,7 +87,7 @@ export const signUp = async (userData: SignUpParams) => {
         secure: true,
         });
 
-        return parseStringify(newUserAccount)
+        return parseStringify(newUser)
 
     } catch (error) {
         console.error('Error', error);
@@ -101,7 +127,7 @@ export const CreateLinkToken = async (user:User) => {
             user:{
                 client_user_id: user.$id
             },
-            client_name: user.name,
+            client_name: `${user.firstName} ${user.lastName}`,
             products: ['auth'] as Products[],
             language: 'en',
             country_codes: ['US'] as CountryCode[],
