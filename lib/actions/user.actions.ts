@@ -120,7 +120,7 @@ export async function getLoggedInUser() {
     }
 }
 
-export const CreateLinkToken = async (user:User) => {
+export const createLinkToken = async (user:User) => {
 
     try {
         const tokenParams = {
