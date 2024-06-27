@@ -44,6 +44,7 @@ const CustFormField = ({control, name, label, placeholder}: CustomInput) => {
                                     placeholder={placeholder}
                                     type={name==='password'?'password':'text'}
                                     {...field}
+                                    id={`${label}`}
                                     />
                                 </FormControl>
                                 <FormMessage className="form-message mt-2" />

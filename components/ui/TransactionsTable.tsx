@@ -1,0 +1,53 @@
+import React from 'react'
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+  } from "@/components/ui/table"
+import { formatAmount, getTransactionStatus } from '@/lib/utils'
+  
+
+const TransactionsTable = ({transactions}:TransactionTableProps) => {
+  return (
+    <Table>
+        <TableHeader className='bg-[#f9fafb]'>
+            <TableRow>
+            <TableHead className="px-2">Transaction</TableHead>
+            <TableHead className="px-2">Amount</TableHead>
+            <TableHead className="px-2">Status</TableHead>
+            <TableHead className="px-2">Date</TableHead>
+            <TableHead className="px-2 max-md:hidden">Channel</TableHead>
+            <TableHead className="px-2 max-md:hidden">Category</TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactions.map((t: Transaction) =>{
+            const status = getTransactionStatus(new Date(t.date))
+            const amount = formatAmount(t.amount)
+            const isDebit = t.type ==='debit';
+            const isCredit = t.type ==='credit';
+            console.log(t)  
+            return (
+              <TableRow key={t.id}>
+                  <TableCell>
+                    <div>
+                      <h1>
+                        {t.name}
+                        a
+                      </h1>
+                    </div>
+                  </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+    </Table>
+
+  )
+}
+
+export default TransactionsTable
