@@ -8,7 +8,7 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table"
-import { formatAmount, getTransactionStatus } from '@/lib/utils'
+import { formatAmount, formatDateTime, getTransactionStatus, removeSpecialCharacters } from '@/lib/utils'
   
 
 const TransactionsTable = ({transactions}:TransactionTableProps) => {
@@ -30,16 +30,29 @@ const TransactionsTable = ({transactions}:TransactionTableProps) => {
             const amount = formatAmount(t.amount)
             const isDebit = t.type ==='debit';
             const isCredit = t.type ==='credit';
-            console.log(t)  
             return (
               <TableRow key={t.id}>
                   <TableCell>
                     <div>
                       <h1>
-                        {t.name}
-                        a
+                        {removeSpecialCharacters(t.name)}
                       </h1>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                        {isDebit? `-${amount}` : isCredit ? amount : amount}
+                  </TableCell>
+                  <TableCell>
+                        {status}
+                  </TableCell>
+                  <TableCell>
+                        {formatDateTime(new Date(t.date)).dateTime}
+                  </TableCell>
+                  <TableCell>
+                        {t.paymentChannel}
+                  </TableCell>
+                  <TableCell>
+                        {t.category}
                   </TableCell>
               </TableRow>
             )
