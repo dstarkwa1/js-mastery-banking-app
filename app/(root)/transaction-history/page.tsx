@@ -3,6 +3,7 @@ import TransactionsTable from '@/components/ui/TransactionsTable';
 import { getAccount, getAccounts } from '@/lib/actions/bank.actions';
 import { getLoggedInUser } from '@/lib/actions/user.actions';
 import { formatAmount } from '@/lib/utils';
+import { Pagination } from '@/components/ui/pagination';
 import React from 'react'
 
 const TransactionHistory = async ({searchParams: {id, page}}:SearchParamProps) => {
@@ -17,6 +18,15 @@ const TransactionHistory = async ({searchParams: {id, page}}:SearchParamProps) =
   const appwriteItemId = (id as string) || accountsData[0]?.appwriteItem
 
   const account = await getAccount({appwriteItemId})
+
+  
+  const rowsPerPage = 10;
+  const totalPages = Math.ceil(account?.transactions.length/rowsPerPage)
+
+  const indexOfLastTransaction = currentPage * rowsPerPage
+  const indexofFirstTransaction = indexOfLastTransaction - rowsPerPage
+
+  const currentTransactions = account?.transactions.slice(indexofFirstTransaction,indexOfLastTransaction)
 
   
   return (
@@ -53,9 +63,16 @@ const TransactionHistory = async ({searchParams: {id, page}}:SearchParamProps) =
           </div>
           <section className='flex w-full flex-col gap-6'>
             <TransactionsTable 
-              transactions={account?.transactions} 
+              transactions={currentTransactions} 
             />
           </section>
+
+          {totalPages > 1 && (
+                  <div className='my-4 w-full'>
+                      <Pagination totalPages={totalPages} page={currentPage}/>
+                  </div>
+          )}
+
         </div>
       </div>
     
